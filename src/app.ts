@@ -10,6 +10,8 @@ import { config } from './config/env';
 import routes from './routes';
 import { errorHandler } from './middleware/errorHandler';
 import { logger } from './utils/logger';
+import { prisma } from './config/database';
+import { getQueueHealth } from './config/queue';
 
 const app: Application = express();
 
@@ -84,8 +86,34 @@ app.use(limiter);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/health', async (req, res) => {
+  try {
+    // Check database connection
+    await prisma.$queryRaw`SELECT 1`;
+    const dbStatus = 'connected';
+
+    // Check queue health
+    const queueHealth = await getQueueHealth();
+    const allQueuesHealthy = queueHealth.every((q) => q.status === 'healthy');
+
+    const overallStatus = dbStatus === 'connected' && allQueuesHealthy ? 'ok' : 'degraded';
+
+    res.status(overallStatus === 'ok' ? 200 : 503).json({
+      status: overallStatus,
+      timestamp: new Date().toISOString(),
+      services: {
+        database: dbStatus,
+        queues: queueHealth,
+      },
+    });
+  } catch (error) {
+    logger.error('Health check failed:', error);
+    res.status(503).json({
+      status: 'error',
+      timestamp: new Date().toISOString(),
+      error: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
 });
 
 // API Routes

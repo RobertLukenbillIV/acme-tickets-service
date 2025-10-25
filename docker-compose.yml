@@ -47,6 +47,24 @@ services:
     volumes:
       - ./logs:/app/logs
 
+  worker:
+    build: .
+    command: npm run start:worker
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://ticketsuser:ticketspass@postgres:5432/tickets_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: your-secret-key-change-in-production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   redis_data:
