@@ -1,0 +1,49 @@
+services:
+  # API Service
+  - type: web
+    name: acme-tickets-api
+    env: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false  # Set this in Render dashboard with your Neon URL
+      - key: JWT_SECRET
+        generateValue: true  # Render will auto-generate a secure secret
+      - key: REDIS_HOST
+        value: redis
+      - key: REDIS_PORT
+        value: 6379
+      - key: API_PREFIX
+        value: /api/v1
+      - key: PORT
+        value: 3000
+
+  # Redis Service (optional, for background jobs)
+  - type: redis
+    name: acme-tickets-redis
+    ipAllowList: []  # Only your services can access
+
+# Alternatively, use native Node.js build instead of Docker:
+# Uncomment below and comment out the Docker config above
+
+# services:
+#   - type: web
+#     name: acme-tickets-api
+#     env: node
+#     buildCommand: npm install && npm run build && npx prisma generate
+#     startCommand: npx prisma migrate deploy && npm start
+#     healthCheckPath: /health
+#     envVars:
+#       - key: NODE_ENV
+#         value: production
+#       - key: DATABASE_URL
+#         sync: false
+#       - key: JWT_SECRET
+#         generateValue: true
+#       - key: API_PREFIX
+#         value: /api/v1
+#       - key: PORT
+#         value: 10000  # Render's default port

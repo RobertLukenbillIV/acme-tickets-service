@@ -2,6 +2,31 @@
 
 A scalable, multi-tenant backend API for ticket management with role-based access control, file attachments, notifications, and webhooks.
 
+## 🎯 Purpose
+
+This repository serves as:
+
+1. **🎮 Live Demo API** - Hosted instance for testing and exploration
+2. **📚 Reference Implementation** - Production-ready patterns and architecture
+3. **🔧 Integration Template** - For multi-repo projects (see [MULTI_REPO_ARCHITECTURE.md](./MULTI_REPO_ARCHITECTURE.md))
+4. **📖 Learning Resource** - Study multi-tenant SaaS architecture
+
+**Not intended for:** Cloning and hosting your own instance. Instead, use the demo API for testing or reference the patterns in your own backend.
+
+---
+
+## 🚀 Quick Links
+
+| Resource | Purpose |
+|----------|---------|
+| [Live Demo](https://acme-tickets-demo.vercel.app) | Try the API interactively |
+| [API Documentation](https://acme-tickets-api.onrender.com/api-docs) | Swagger/OpenAPI docs |
+| [API Examples](./API_EXAMPLES.md) | Code examples for all endpoints |
+| [Multi-Repo Guide](./MULTI_REPO_ARCHITECTURE.md) | How to integrate in your projects |
+| [Quick Reference](./.github/copilot-instructions.md) | Architecture overview for AI agents |
+
+---
+
 ## Features
 
 - **Multi-Tenant Architecture**: Complete tenant isolation with data segregation
@@ -274,13 +299,93 @@ GET /health
 
 Returns server status and timestamp.
 
+---
+
+## 🎮 Using the Demo API
+
+### Live Demo Instance
+
+**Demo Site:** https://acme-tickets-demo.vercel.app  
+**API Base URL:** https://acme-tickets-api.onrender.com/api/v1  
+**API Docs:** https://acme-tickets-api.onrender.com/api-docs
+
+**Test Credentials:**
+- Email: `admin@demo.com`
+- Password: `SecurePass123!`
+- Tenant: Demo Company
+
+### Integration in Your Projects
+
+Use the demo API for development/testing:
+
+```javascript
+// your-frontend/src/api/config.js
+const API_URL = 'https://acme-tickets-api.onrender.com/api/v1';
+
+// Login
+const { token } = await fetch(`${API_URL}/auth/login`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ 
+    email: 'admin@demo.com', 
+    password: 'SecurePass123!' 
+  })
+}).then(r => r.json());
+
+// Create ticket
+await fetch(`${API_URL}/tickets`, {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    title: 'Issue from my app',
+    description: 'Testing integration',
+    priority: 'MEDIUM'
+  })
+});
+```
+
+**See [MULTI_REPO_ARCHITECTURE.md](./MULTI_REPO_ARCHITECTURE.md) for complete integration patterns.**
+
+---
+
+## 📚 Documentation
+
+- **[API_EXAMPLES.md](./API_EXAMPLES.md)** - Complete API usage examples
+- **[QUICKSTART.md](./QUICKSTART.md)** - Quick setup guide
+- **[MULTI_REPO_ARCHITECTURE.md](./MULTI_REPO_ARCHITECTURE.md)** - Multi-repo integration patterns
+- **[.github/copilot-instructions.md](./.github/copilot-instructions.md)** - Architecture quick reference
+- **[RENDER_NEON_DEPLOYMENT.md](./RENDER_NEON_DEPLOYMENT.md)** - Deploy demo to production
+- **[demo-site/](./demo-site/)** - Interactive frontend demo
+
+---
+
+## 🏗️ Architecture for Your Projects
+
+This repo demonstrates patterns you can use in your own multi-repo projects:
+
+```
+your-project/
+├── your-backend-api/          ← Reference this repo's patterns
+├── your-frontend/             ← Consume the demo API or your own
+├── your-admin-dashboard/      ← Another consumer
+└── shared-components/         ← Shared UI (like acme-ui repo)
+```
+
+**Learn more:** [MULTI_REPO_ARCHITECTURE.md](./MULTI_REPO_ARCHITECTURE.md)
+
+---
+
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch
-3. Commit your changes
-4. Push to the branch
-5. Create a Pull Request
+Contributions welcome! This is a reference implementation, so focus on:
+- 📚 Improving documentation
+- 🐛 Fixing demo bugs
+- ✨ Enhancing demo UI
+- 📖 Adding more examples
+- 🏗️ Better architecture patterns
 
 ## License
 
@@ -288,4 +393,7 @@ ISC
 
 ## Support
 
-For issues and questions, please open an issue on GitHub.
+- 🐛 **Issues:** Open a GitHub issue
+- 📖 **Documentation:** Check the docs in this repo
+- 🎮 **Try it:** Use the live demo
+- 💬 **Questions:** See [API_EXAMPLES.md](./API_EXAMPLES.md) or [Swagger docs](https://acme-tickets-api.onrender.com/api-docs)

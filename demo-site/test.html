@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Connection Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .test-box {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .success { color: #10b981; font-weight: bold; }
+        .error { color: #ef4444; font-weight: bold; }
+        .info { color: #3b82f6; font-family: monospace; font-size: 12px; }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover { background: #1d4ed8; }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 API Connection Test</h1>
+    
+    <div class="test-box">
+        <h3>Environment Detection</h3>
+        <p><strong>Current Host:</strong> <span id="current-host"></span></p>
+        <p><strong>Detected API URL:</strong> <span class="info" id="api-url"></span></p>
+        <p><strong>Running in Codespaces:</strong> <span id="is-codespaces"></span></p>
+    </div>
+
+    <div class="test-box">
+        <h3>Port Accessibility Tests</h3>
+        <button onclick="testHealth()">Test Health Endpoint</button>
+        <button onclick="testLogin()">Test Login</button>
+        <button onclick="testCORS()">Test CORS</button>
+        <div id="test-results" style="margin-top: 15px;"></div>
+    </div>
+
+    <div class="test-box">
+        <h3>Response Log</h3>
+        <pre id="response-log">Click a test button above...</pre>
+    </div>
+
+    <script>
+        // Detect API URL (same logic as app.js)
+        const getApiBaseUrl = () => {
+            if (window.location.hostname.includes('app.github.dev')) {
+                const match = window.location.hostname.match(/^([^-]+(?:-[^-]+)*)-\d+\.app\.github\.dev$/);
+                if (match) {
+                    const codespaceName = match[1];
+                    return `https://${codespaceName}-3000.app.github.dev/api/v1`;
+                }
+            }
+            return 'http://localhost:3000/api/v1';
+        };
+
+        const API_BASE_URL = getApiBaseUrl();
+
+        // Display environment info
+        document.getElementById('current-host').textContent = window.location.hostname;
+        document.getElementById('api-url').textContent = API_BASE_URL;
+        document.getElementById('is-codespaces').textContent = 
+            window.location.hostname.includes('app.github.dev') ? 'Yes ✅' : 'No (Local) 💻';
+
+        function log(message, type = 'info') {
+            const results = document.getElementById('test-results');
+            const log = document.getElementById('response-log');
+            const timestamp = new Date().toLocaleTimeString();
+            
+            results.innerHTML += `<div class="${type}">[${timestamp}] ${message}</div>`;
+            log.textContent = message + '\n\n' + log.textContent;
+        }
+
+        async function testHealth() {
+            log('Testing health endpoint...', 'info');
+            try {
+                const response = await fetch(API_BASE_URL.replace('/api/v1', '') + '/health');
+                const data = await response.json();
+                log(`✅ SUCCESS: ${JSON.stringify(data, null, 2)}`, 'success');
+            } catch (error) {
+                log(`❌ FAILED: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLogin() {
+            log('Testing login endpoint...', 'info');
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@demo.com',
+                        password: 'SecurePass123!'
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    log(`✅ SUCCESS: Login successful! Token: ${data.token.substring(0, 50)}...`, 'success');
+                } else {
+                    log(`❌ FAILED: ${JSON.stringify(data)}`, 'error');
+                }
+            } catch (error) {
+                log(`❌ FAILED: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCORS() {
+            log('Testing CORS headers...', 'info');
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'OPTIONS',
+                    headers: {
+                        'Origin': window.location.origin,
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'Content-Type, Authorization'
+                    }
+                });
+                
+                const corsHeader = response.headers.get('Access-Control-Allow-Origin');
+                if (corsHeader) {
+                    log(`✅ SUCCESS: CORS enabled. Access-Control-Allow-Origin: ${corsHeader}`, 'success');
+                } else {
+                    log(`⚠️ WARNING: No CORS headers found`, 'error');
+                }
+            } catch (error) {
+                log(`❌ FAILED: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-run health test on load
+        window.onload = () => {
+            setTimeout(testHealth, 500);
+        };
+    </script>
+</body>
+</html>
