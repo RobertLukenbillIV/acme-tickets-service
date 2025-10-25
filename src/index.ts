@@ -2,6 +2,7 @@ import app from './app';
 import { config } from './config/env';
 import { logger } from './utils/logger';
 import { prisma } from './config/database';
+import { closeQueues } from './config/queue';
 
 const startServer = async () => {
   try {
@@ -17,17 +18,16 @@ const startServer = async () => {
     });
 
     // Graceful shutdown
-    process.on('SIGTERM', async () => {
-      logger.info('SIGTERM signal received: closing HTTP server');
+    const shutdown = async () => {
+      logger.info('Shutdown signal received: closing server...');
+      await closeQueues();
       await prisma.$disconnect();
+      logger.info('Server shut down gracefully');
       process.exit(0);
-    });
+    };
 
-    process.on('SIGINT', async () => {
-      logger.info('SIGINT signal received: closing HTTP server');
-      await prisma.$disconnect();
-      process.exit(0);
-    });
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
   } catch (error) {
     logger.error('Failed to start server:', error);
     process.exit(1);
