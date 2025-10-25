@@ -1,0 +1,207 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  settings  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  users     User[]
+  tickets   Ticket[]
+  webhooks  Webhook[]
+}
+
+enum UserRole {
+  ADMIN
+  AGENT
+  USER
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  password     String
+  firstName    String
+  lastName     String
+  role         UserRole @default(USER)
+  tenantId     String
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  
+  tenant       Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tickets      Ticket[]
+  comments     Comment[]
+  notifications Notification[]
+  
+  @@index([tenantId])
+  @@index([email])
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+  CANCELLED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+model Ticket {
+  id          String         @id @default(uuid())
+  title       String
+  description String
+  status      TicketStatus   @default(OPEN)
+  priority    TicketPriority @default(MEDIUM)
+  tenantId    String
+  createdById String
+  assignedToId String?
+  metadata    Json?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  
+  tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  createdBy   User           @relation(fields: [createdById], references: [id])
+  comments    Comment[]
+  attachments Attachment[]
+  activities  TicketActivity[]
+  
+  @@index([tenantId])
+  @@index([createdById])
+  @@index([status])
+  @@index([priority])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  ticketId  String
+  authorId  String
+  isInternal Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id])
+  
+  @@index([ticketId])
+  @@index([authorId])
+}
+
+model Attachment {
+  id        String   @id @default(uuid())
+  filename  String
+  fileUrl   String
+  fileSize  Int
+  mimeType  String
+  ticketId  String
+  createdAt DateTime @default(now())
+  
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  @@index([ticketId])
+}
+
+enum ActivityType {
+  CREATED
+  UPDATED
+  COMMENTED
+  STATUS_CHANGED
+  PRIORITY_CHANGED
+  ASSIGNED
+}
+
+model TicketActivity {
+  id        String       @id @default(uuid())
+  ticketId  String
+  type      ActivityType
+  changes   Json?
+  createdAt DateTime     @default(now())
+  
+  ticket    Ticket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  
+  @@index([ticketId])
+}
+
+enum NotificationType {
+  TICKET_CREATED
+  TICKET_UPDATED
+  TICKET_ASSIGNED
+  COMMENT_ADDED
+  STATUS_CHANGED
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  type      NotificationType
+  userId    String
+  title     String
+  message   String
+  data      Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([isRead])
+}
+
+enum WebhookEvent {
+  TICKET_CREATED
+  TICKET_UPDATED
+  TICKET_CLOSED
+  COMMENT_ADDED
+}
+
+model Webhook {
+  id        String         @id @default(uuid())
+  tenantId  String
+  url       String
+  events    WebhookEvent[]
+  secret    String
+  isActive  Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  
+  tenant    Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  deliveries WebhookDelivery[]
+  
+  @@index([tenantId])
+}
+
+model WebhookDelivery {
+  id          String   @id @default(uuid())
+  webhookId   String
+  event       String
+  payload     Json
+  statusCode  Int?
+  response    String?
+  success     Boolean  @default(false)
+  attempts    Int      @default(0)
+  createdAt   DateTime @default(now())
+  deliveredAt DateTime?
+  
+  webhook     Webhook  @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+  
+  @@index([webhookId])
+  @@index([success])
+}

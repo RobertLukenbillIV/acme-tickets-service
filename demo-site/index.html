@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACME Tickets - Demo</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="login-screen" class="screen active">
+            <div class="login-container">
+                <h1>🎫 ACME Tickets</h1>
+                <p class="subtitle">Multi-tenant Ticket Management System</p>
+                
+                <div class="card">
+                    <h2>Login</h2>
+                    <form id="login-form">
+                        <input type="email" id="email" placeholder="Email" value="admin@demo.com" required>
+                        <input type="password" id="password" placeholder="Password" value="SecurePass123!" required>
+                        <button type="submit" class="btn btn-primary">Login</button>
+                    </form>
+                    <div id="login-error" class="error hidden"></div>
+                </div>
+
+                <div class="info-box">
+                    <h3>Demo Credentials</h3>
+                    <p><strong>Email:</strong> admin@demo.com</p>
+                    <p><strong>Password:</strong> SecurePass123!</p>
+                    <p class="note">This demo showcases the backend API capabilities</p>
+                    <p class="note" id="api-url-info" style="margin-top: 10px; font-family: monospace; font-size: 12px;">API: Detecting...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard -->
+        <div id="dashboard-screen" class="screen">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-content">
+                    <h1>🎫 ACME Tickets</h1>
+                    <div class="header-right">
+                        <div class="notification-badge" id="notification-badge">
+                            <span class="badge" id="notification-count">0</span>
+                            <button class="btn-icon" id="notifications-btn">🔔</button>
+                        </div>
+                        <div class="user-info">
+                            <span id="user-name"></span>
+                            <span class="role-badge" id="user-role"></span>
+                        </div>
+                        <button class="btn btn-secondary" id="logout-btn">Logout</button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Navigation Tabs -->
+            <nav class="tabs">
+                <button class="tab active" data-tab="tickets">📋 Tickets</button>
+                <button class="tab" data-tab="notifications">🔔 Notifications</button>
+                <button class="tab" data-tab="webhooks">🔗 Webhooks</button>
+                <button class="tab" data-tab="api-test">🧪 API Tester</button>
+            </nav>
+
+            <!-- Main Content Area -->
+            <main class="main-content">
+                <!-- Tickets Tab -->
+                <div id="tickets-tab" class="tab-content active">
+                    <div class="toolbar">
+                        <h2>Tickets</h2>
+                        <div class="toolbar-actions">
+                            <select id="status-filter">
+                                <option value="">All Statuses</option>
+                                <option value="OPEN">Open</option>
+                                <option value="IN_PROGRESS">In Progress</option>
+                                <option value="RESOLVED">Resolved</option>
+                                <option value="CLOSED">Closed</option>
+                            </select>
+                            <select id="priority-filter">
+                                <option value="">All Priorities</option>
+                                <option value="LOW">Low</option>
+                                <option value="MEDIUM">Medium</option>
+                                <option value="HIGH">High</option>
+                                <option value="URGENT">Urgent</option>
+                            </select>
+                            <button class="btn btn-primary" id="create-ticket-btn">+ New Ticket</button>
+                        </div>
+                    </div>
+
+                    <div id="tickets-list" class="tickets-list">
+                        <!-- Tickets will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Notifications Tab -->
+                <div id="notifications-tab" class="tab-content">
+                    <div class="toolbar">
+                        <h2>Notifications</h2>
+                        <button class="btn btn-secondary" id="mark-all-read-btn">Mark All as Read</button>
+                    </div>
+                    <div id="notifications-list" class="notifications-list">
+                        <!-- Notifications will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Webhooks Tab -->
+                <div id="webhooks-tab" class="tab-content">
+                    <div class="toolbar">
+                        <h2>Webhooks</h2>
+                        <button class="btn btn-primary" id="create-webhook-btn">+ New Webhook</button>
+                    </div>
+                    <div id="webhooks-list" class="webhooks-list">
+                        <!-- Webhooks will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- API Test Tab -->
+                <div id="api-test-tab" class="tab-content">
+                    <h2>API Endpoint Tester</h2>
+                    <div class="api-tester">
+                        <div class="api-controls">
+                            <select id="api-method">
+                                <option value="GET">GET</option>
+                                <option value="POST">POST</option>
+                                <option value="PUT">PUT</option>
+                                <option value="DELETE">DELETE</option>
+                            </select>
+                            <input type="text" id="api-endpoint" placeholder="/api/v1/tickets" value="/api/v1/tickets">
+                            <button class="btn btn-primary" id="api-test-btn">Send Request</button>
+                        </div>
+                        <div class="api-body">
+                            <h4>Request Body (JSON)</h4>
+                            <textarea id="api-body" rows="6" placeholder='{"title": "Test", "description": "Test ticket"}'></textarea>
+                        </div>
+                        <div class="api-response">
+                            <h4>Response</h4>
+                            <pre id="api-response-output">Response will appear here...</pre>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Modal for Ticket Details/Create -->
+        <div id="ticket-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modal-title">Ticket Details</h3>
+                    <button class="close-btn" id="close-ticket-modal">&times;</button>
+                </div>
+                <div class="modal-body" id="ticket-modal-body">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for Webhook Create -->
+        <div id="webhook-modal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Create Webhook</h3>
+                    <button class="close-btn" id="close-webhook-modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="webhook-form">
+                        <input type="url" id="webhook-url" placeholder="Webhook URL" required>
+                        <div class="checkbox-group">
+                            <label><input type="checkbox" name="events" value="TICKET_CREATED"> Ticket Created</label>
+                            <label><input type="checkbox" name="events" value="TICKET_UPDATED"> Ticket Updated</label>
+                            <label><input type="checkbox" name="events" value="TICKET_CLOSED"> Ticket Closed</label>
+                            <label><input type="checkbox" name="events" value="COMMENT_ADDED"> Comment Added</label>
+                        </div>
+                        <input type="text" id="webhook-secret" placeholder="Secret Key" required>
+                        <button type="submit" class="btn btn-primary">Create Webhook</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Optional: Load production API configuration -->
+    <script src="config.js"></script>
+    <script src="app.js?v=2"></script>
+</body>
+</html>
