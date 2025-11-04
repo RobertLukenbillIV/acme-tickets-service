@@ -51,26 +51,26 @@ model User {
 }
 
 enum TicketStatus {
-  OPEN
-  IN_PROGRESS
-  RESOLVED
-  CLOSED
-  CANCELLED
+  open
+  in_progress
+  resolved
+  closed
+  cancelled
 }
 
 enum TicketPriority {
-  LOW
-  MEDIUM
-  HIGH
-  URGENT
+  low
+  medium
+  high
+  urgent
 }
 
 model Ticket {
   id          String         @id @default(uuid())
   title       String
   description String
-  status      TicketStatus   @default(OPEN)
-  priority    TicketPriority @default(MEDIUM)
+  status      TicketStatus   @default(open)
+  priority    TicketPriority @default(medium)
   tenantId    String
   createdById String
   assignedToId String?

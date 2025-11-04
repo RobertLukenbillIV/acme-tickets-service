@@ -18,7 +18,7 @@ export class CommentService {
     });
 
     if (!ticket) {
-      throw new AppError(404, 'Ticket not found');
+      throw new AppError(404, 'Ticket not found', 'NOT_FOUND');
     }
 
     const comment = await prisma.comment.create({
@@ -60,7 +60,7 @@ export class CommentService {
     });
 
     if (!ticket) {
-      throw new AppError(404, 'Ticket not found');
+      throw new AppError(404, 'Ticket not found', 'NOT_FOUND');
     }
 
     const comments = await prisma.comment.findMany({
@@ -98,7 +98,7 @@ export class CommentService {
     });
 
     if (!ticket) {
-      throw new AppError(404, 'Ticket not found');
+      throw new AppError(404, 'Ticket not found', 'NOT_FOUND');
     }
 
     const comment = await prisma.comment.findFirst({
@@ -110,7 +110,11 @@ export class CommentService {
     });
 
     if (!comment) {
-      throw new AppError(404, 'Comment not found or you are not authorized to update it');
+      throw new AppError(
+        404,
+        'Comment not found or you are not authorized to update it',
+        'NOT_FOUND'
+      );
     }
 
     const updated = await prisma.comment.update({
@@ -140,7 +144,7 @@ export class CommentService {
     });
 
     if (!ticket) {
-      throw new AppError(404, 'Ticket not found');
+      throw new AppError(404, 'Ticket not found', 'NOT_FOUND');
     }
 
     const comment = await prisma.comment.findFirst({
@@ -152,7 +156,11 @@ export class CommentService {
     });
 
     if (!comment) {
-      throw new AppError(404, 'Comment not found or you are not authorized to delete it');
+      throw new AppError(
+        404,
+        'Comment not found or you are not authorized to delete it',
+        'NOT_FOUND'
+      );
     }
 
     await prisma.comment.delete({

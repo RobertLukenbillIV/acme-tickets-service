@@ -49,7 +49,7 @@ export class AttachmentService {
     });
 
     if (!ticket) {
-      throw new AppError(404, 'Ticket not found');
+      throw new AppError(404, 'Ticket not found', 'NOT_FOUND');
     }
 
     const attachment = await prisma.attachment.create({
@@ -74,7 +74,7 @@ export class AttachmentService {
     });
 
     if (!ticket) {
-      throw new AppError(404, 'Ticket not found');
+      throw new AppError(404, 'Ticket not found', 'NOT_FOUND');
     }
 
     const attachments = await prisma.attachment.findMany({
@@ -96,7 +96,7 @@ export class AttachmentService {
     });
 
     if (!ticket) {
-      throw new AppError(404, 'Ticket not found');
+      throw new AppError(404, 'Ticket not found', 'NOT_FOUND');
     }
 
     const attachment = await prisma.attachment.findFirst({
@@ -107,7 +107,7 @@ export class AttachmentService {
     });
 
     if (!attachment) {
-      throw new AppError(404, 'Attachment not found');
+      throw new AppError(404, 'Attachment not found', 'NOT_FOUND');
     }
 
     await prisma.attachment.delete({

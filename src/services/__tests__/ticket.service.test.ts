@@ -30,15 +30,21 @@ describe('TicketService', () => {
       const ticketData = {
         title: 'Test Ticket',
         description: 'Test Description',
+        priority: 'medium' as const,
         tenantId: 'tenant-1',
         createdById: 'user-1',
       };
 
       const mockTicket = {
         id: 'ticket-1',
-        ...ticketData,
-        status: TicketStatus.OPEN,
-        priority: TicketPriority.MEDIUM,
+        title: ticketData.title,
+        description: ticketData.description,
+        tenantId: ticketData.tenantId,
+        createdById: ticketData.createdById,
+        status: TicketStatus.open,
+        priority: TicketPriority.medium,
+        assignedToId: null,
+        metadata: {},
         createdAt: new Date(),
         updatedAt: new Date(),
         createdBy: {
@@ -76,7 +82,7 @@ describe('TicketService', () => {
           id: 'ticket-1',
           title: 'Test Ticket 1',
           description: 'Description 1',
-          status: TicketStatus.OPEN,
+          status: TicketStatus.open,
           tenantId: 'tenant-1',
         },
       ];
