@@ -21,8 +21,8 @@ router.get('/', (req, res) => {
       webhooks: '/api/v1/webhooks',
       tenants: '/api/v1/tenants',
       notifications: '/api/v1/notifications',
-      docs: '/api-docs'
-    }
+      docs: '/api-docs',
+    },
   });
 });
 
