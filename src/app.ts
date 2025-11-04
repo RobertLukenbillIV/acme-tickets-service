@@ -13,6 +13,9 @@ import { logger } from './utils/logger';
 
 const app: Application = express();
 
+// Trust proxy for Codespaces/reverse proxy environments
+app.set('trust proxy', true);
+
 // Swagger configuration
 const swaggerOptions = {
   definition: {
@@ -57,7 +60,7 @@ app.use(cors({
   origin: '*', // Allow all origins for development
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
+  credentials: false, // Must be false when using wildcard origin
   preflightContinue: false,
   optionsSuccessStatus: 204
 }));

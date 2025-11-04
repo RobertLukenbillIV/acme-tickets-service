@@ -42,7 +42,7 @@ export class WebhookService {
     });
 
     if (!webhook) {
-      throw new AppError(404, 'Webhook not found');
+      throw new AppError(404, 'Webhook not found', 'NOT_FOUND');
     }
 
     const updated = await prisma.webhook.update({
@@ -59,7 +59,7 @@ export class WebhookService {
     });
 
     if (!webhook) {
-      throw new AppError(404, 'Webhook not found');
+      throw new AppError(404, 'Webhook not found', 'NOT_FOUND');
     }
 
     await prisma.webhook.delete({

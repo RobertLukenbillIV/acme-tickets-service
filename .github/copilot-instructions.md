@@ -1,60 +1,51 @@
-## Quick orientation for AI coding agents
+## Quick orientation for AI coding agents (concise)
 
-This repository is a TypeScript Express API implementing a multi-tenant tickets service backed by PostgreSQL (Prisma). The guidance below highlights project conventions, important files, and precise developer workflows so an AI agent can be immediately productive.
+This is a TypeScript Express API implementing a multi-tenant tickets service using Prisma + PostgreSQL. Below are the minimal, high-value facts an AI agent needs to be productive immediately.
 
 - Entry points
-  - `src/index.ts` — server bootstrap; connects `prisma` and starts the HTTP server.
-  - `src/app.ts` — Express app: middleware, Swagger config (`/api-docs`), rate limiting, and route mounting.
+  - `src/index.ts` — bootstraps logging, Prisma, and starts the HTTP server.
+  - `src/app.ts` — configures Express (middleware, Swagger at `/api-docs`), rate-limiter, and mounts routes from `src/routes`.
 
-- Architectural pattern (controller → service → prisma)
-  - `src/routes/*.ts` register route groups (see `src/routes/index.ts`).
-  - Controllers are thin and live in `src/controllers/` (e.g., `ticket.controller.ts`) — they extract request data and call services.
-  - Business logic lives in `src/services/` (e.g., `ticket.service.ts`) and uses the `prisma` client from `src/config/database.ts`.
-  - Always enforce tenant scoping in services (most service methods accept `tenantId` and use it in queries).
+- Architectural pattern
+  - Controller → Service → Prisma. Routes wire controllers (thin). Controllers call services (business logic). Services use the shared Prisma client at `src/config/database.ts`.
+  - Files to inspect for examples: `src/routes/ticket.routes.ts`, `src/controllers/ticket.controller.ts`, `src/services/ticket.service.ts`.
 
-- Important config and infra points
-  - `prisma/schema.prisma` — canonical data model (Tenant, User, Ticket, etc.). Run `npm run prisma:generate` after edits.
-  - Environment values are defined/read in `src/config/env.ts`. Key vars: `DATABASE_URL`, `JWT_SECRET`, `REDIS_*`, `S3_BUCKET_NAME`, `API_PREFIX`.
-  - S3 presigned uploads are used for attachments (see attachment service/routes).
-  - Redis + Bull are prepared for background jobs (jobs live in `src/jobs/`).
+- Tenant scoping (critical)
+  - All reads/writes must be tenant-scoped at the service layer. Typical pattern: `prisma.findFirst({ where: { id, tenantId } })` or include `tenantId` in `where` for updates/deletes. Do not rely on route middleware alone.
 
-- Auth, RBAC and tenant access
-  - Authentication & authorization middleware: `src/middleware/auth.ts`. Use `authenticate` to require JWT and `authorize(...roles)` to enforce RBAC.
-  - Routes and services rely on `AuthRequest` (augmented request with `user`) — controllers read `req.user` and pass `tenantId` to services.
-  - When adding endpoints, ensure service-level tenant checks (do not rely on routes alone).
+- Auth & request shape
+  - Auth middleware: `src/middleware/auth.ts`. Use `authenticate` to require JWT and `authorize(...)` to enforce roles.
+  - Controllers expect an augmented `AuthRequest` (`req.user`) — pass `req.user.tenantId` into services.
 
-- Error handling & logging
-  - Central error handler: `src/middleware/errorHandler.ts` (services throw `AppError` for HTTP errors).
-  - Structured logging via `src/utils/logger.ts` (Winston). Use logger.* instead of console.*.
+- Important config & env
+  - Prisma model: `prisma/schema.prisma`. After schema edits run `npm run prisma:generate` and migrations (`npm run prisma:migrate`).
+  - Environment variables live in `src/config/env.ts`. Key names: `DATABASE_URL`, `JWT_SECRET`, `REDIS_*`, `S3_BUCKET_NAME`, `API_PREFIX`.
 
-- Tests & linting
-  - Tests: Jest + ts-jest. Tests live under `src/**/__tests__` (see `jest.config.js`). Run `npm test` and `npm run test:coverage`.
-  - Linting: `npm run lint` and `npm run lint:fix`. Formatting: `npm run format`.
+- Scripts (from `package.json`) — useful commands
+  - `npm run dev` — dev server (nodemon + ts-node)
+  - `npm run build` → `dist/` (tsc)
+  - `npm start` — run built app
+  - `npm test`, `npm run test:coverage` — Jest tests
+  - `npm run lint` / `npm run lint:fix` / `npm run format`
+  - `npm run prisma:generate`, `npm run prisma:migrate`, `npm run prisma:studio`
 
-- Common developer commands (copyable)
-  - Install: `npm install`
-  - Dev: `npm run dev` (nodemon + ts-node)
-  - Build: `npm run build` → output `dist/`
-  - Start (prod): `npm run start`
-  - Prisma: `npm run prisma:generate`, `npm run prisma:migrate`, `npm run prisma:studio`
-  - Docker: `docker-compose up -d` (starts Postgres, Redis, API)
+- Integration points & infra
+  - Attachments: S3 presigned upload flow (see `attachment.service.ts`/`attachment.routes.ts`).
+  - Background jobs: Redis + Bull used in `src/jobs/` and `notification.service.ts`.
+  - Swagger docs: auto-generated from JSDoc in `src/routes/*.ts` and available at `/api-docs` in dev.
 
-- Code-change patterns to follow (concrete examples)
-  - New route: add a route file in `src/routes/` and register it in `src/routes/index.ts`.
-  - New controller: add a class in `src/controllers/`, keep logic thin, call a service (example: `TicketController.createTicket` calls `TicketService.createTicket`).
-  - New service: add to `src/services/`, use `prisma` from `src/config/database.ts`, include tenant filters in `where` clauses. Create Activity records for ticket changes where appropriate (see `TicketService`).
-  - Secure endpoints: use `authenticate` + `authorize(...)` in the route file. Example pattern in routes:
+- Patterns & small examples
+  - Add a route: create `src/routes/your.resource.routes.ts` and register in `src/routes/index.ts`.
+  - Add controller: `src/controllers/YourController` should be thin; extract data and call a service.
+  - Add service: `src/services/your.service.ts` — always pass `tenantId` into Prisma `where` clauses and create Activity records where applicable (see `ticket.service.ts`).
 
-    router.post('/', authenticate, authorize(UserRole.AGENT, UserRole.ADMIN), controller.createTicket.bind(controller));
+- Observability & errors
+  - Central error handler: `src/middleware/errorHandler.ts`. Services throw `AppError` for HTTP responses.
+  - Logging: use `src/utils/logger.ts` (Winston) instead of console.
 
-- Integration & observability
-  - Swagger docs: configured in `src/app.ts`, scanning `./src/routes/*.ts` for JSDoc. API docs available at `/api-docs` in dev.
-  - Health check: `GET /health`.
-  - Prisma emits warnings/errors to logger — check logs when debugging DB issues.
+- Quick validation tips before PR
+  - Unit tests: `npm test` (Jest). See `src/**/__tests__` for patterns.
+  - Lint and format: `npm run lint` and `npm run format`.
+  - Prisma changes: run `npm run prisma:generate` and include migrations if schema changed.
 
-- Small but important gotchas
-  - Tenant scoping is enforced in services — do not return cross-tenant data.
-  - Use `prisma.findFirst({ where: { id, tenantId }})` when fetching resource by id.
-  - When changing the Prisma schema run `prisma:generate` and migrations if needed.
-
-If any section is unclear or you'd like more examples (route templates, service templates, or a short PR checklist), tell me which area to expand and I'll update this file.
+If something here is unclear or you want more examples (route/controller/service templates, integration tests, or a PR checklist), tell me which area to expand and I'll iterate.

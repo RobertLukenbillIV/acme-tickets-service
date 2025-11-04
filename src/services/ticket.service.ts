@@ -1,20 +1,26 @@
 import { prisma } from '../config/database';
 import { TicketStatus, TicketPriority, ActivityType } from '@prisma/client';
 import { AppError } from '../middleware/errorHandler';
+import { CreateTicketRequest, UpdateTicketRequest } from '../contracts';
+import { contractToPrismaStatus, contractToPrismaPriority } from '../utils/typeMappers';
 
 export class TicketService {
-  async createTicket(data: {
-    title: string;
-    description: string;
-    priority?: TicketPriority;
-    tenantId: string;
-    createdById: string;
-    assignedToId?: string;
-    metadata?: object;
-  }) {
+  async createTicket(
+    data: CreateTicketRequest & {
+      tenantId: string;
+      createdById: string;
+      assignedToId?: string;
+      metadata?: object;
+    }
+  ) {
     const ticket = await prisma.ticket.create({
       data: {
-        ...data,
+        title: data.title,
+        description: data.description,
+        priority: contractToPrismaPriority(data.priority),
+        tenantId: data.tenantId,
+        createdById: data.createdById,
+        assignedToId: data.assignedToId,
         metadata: data.metadata || {},
       },
       include: {
@@ -124,7 +130,7 @@ export class TicketService {
     });
 
     if (!ticket) {
-      throw new AppError(404, 'Ticket not found');
+      throw new AppError(404, 'Ticket not found', 'NOT_FOUND');
     }
 
     return ticket;
@@ -133,11 +139,7 @@ export class TicketService {
   async updateTicket(
     id: string,
     tenantId: string,
-    data: {
-      title?: string;
-      description?: string;
-      status?: TicketStatus;
-      priority?: TicketPriority;
+    data: UpdateTicketRequest & {
       assignedToId?: string;
       metadata?: object;
     }
@@ -147,12 +149,19 @@ export class TicketService {
     });
 
     if (!ticket) {
-      throw new AppError(404, 'Ticket not found');
+      throw new AppError(404, 'Ticket not found', 'NOT_FOUND');
     }
 
     const updated = await prisma.ticket.update({
       where: { id },
-      data,
+      data: {
+        ...(data.title && { title: data.title }),
+        ...(data.description && { description: data.description }),
+        ...(data.status && { status: contractToPrismaStatus(data.status) }),
+        ...(data.priority && { priority: contractToPrismaPriority(data.priority) }),
+        ...(data.assignedToId && { assignedToId: data.assignedToId }),
+        ...(data.metadata && { metadata: data.metadata }),
+      },
       include: {
         createdBy: {
           select: {
@@ -182,7 +191,7 @@ export class TicketService {
     });
 
     if (!ticket) {
-      throw new AppError(404, 'Ticket not found');
+      throw new AppError(404, 'Ticket not found', 'NOT_FOUND');
     }
 
     await prisma.ticket.delete({

@@ -17,7 +17,7 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new AppError(400, 'User with this email already exists');
+      throw new AppError(400, 'User with this email already exists', 'CONFLICT');
     }
 
     const hashedPassword = await bcrypt.hash(data.password, 10);
@@ -47,13 +47,13 @@ export class AuthService {
     });
 
     if (!user || !user.isActive) {
-      throw new AppError(401, 'Invalid credentials');
+      throw new AppError(401, 'Invalid credentials', 'UNAUTHORIZED');
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
-      throw new AppError(401, 'Invalid credentials');
+      throw new AppError(401, 'Invalid credentials', 'UNAUTHORIZED');
     }
 
     const token = jwt.sign(

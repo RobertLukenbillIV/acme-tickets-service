@@ -9,6 +9,28 @@ import notificationRoutes from './notification.routes';
 
 const router = Router();
 
+// API root endpoint
+router.get('/', (req, res) => {
+  res.json({
+    message: 'Tickets Service API',
+    version: '1.0.0',
+    endpoints: {
+      health: '/api/v1/health',
+      auth: '/api/v1/auth',
+      tickets: '/api/v1/tickets',
+      webhooks: '/api/v1/webhooks',
+      tenants: '/api/v1/tenants',
+      notifications: '/api/v1/notifications',
+      docs: '/api-docs'
+    }
+  });
+});
+
+// Health check endpoint
+router.get('/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
 router.use('/auth', authRoutes);
 router.use('/tickets', ticketRoutes);
 router.use('/tickets', commentRoutes);

@@ -306,10 +306,10 @@ function showCreateTicketModal() {
             <textarea id="ticket-description" rows="4" placeholder="Ticket Description" required></textarea>
             
             <select id="ticket-priority">
-                <option value="LOW">Low Priority</option>
-                <option value="MEDIUM" selected>Medium Priority</option>
-                <option value="HIGH">High Priority</option>
-                <option value="URGENT">Urgent</option>
+                <option value="low">Low Priority</option>
+                <option value="medium" selected>Medium Priority</option>
+                <option value="high">High Priority</option>
+                <option value="urgent">Urgent</option>
             </select>
             
             <button type="submit" class="btn btn-primary">Create Ticket</button>

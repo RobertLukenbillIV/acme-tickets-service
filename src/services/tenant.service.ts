@@ -8,7 +8,7 @@ export class TenantService {
     });
 
     if (existingTenant) {
-      throw new AppError(400, 'Tenant with this slug already exists');
+      throw new AppError(400, 'Tenant with this slug already exists', 'CONFLICT');
     }
 
     const tenant = await prisma.tenant.create({
@@ -37,7 +37,7 @@ export class TenantService {
     });
 
     if (!tenant) {
-      throw new AppError(404, 'Tenant not found');
+      throw new AppError(404, 'Tenant not found', 'NOT_FOUND');
     }
 
     return tenant;
@@ -49,7 +49,7 @@ export class TenantService {
     });
 
     if (!tenant) {
-      throw new AppError(404, 'Tenant not found');
+      throw new AppError(404, 'Tenant not found', 'NOT_FOUND');
     }
 
     return tenant;
@@ -61,7 +61,7 @@ export class TenantService {
     });
 
     if (!tenant) {
-      throw new AppError(404, 'Tenant not found');
+      throw new AppError(404, 'Tenant not found', 'NOT_FOUND');
     }
 
     if (data.slug && data.slug !== tenant.slug) {
@@ -70,7 +70,7 @@ export class TenantService {
       });
 
       if (existingTenant) {
-        throw new AppError(400, 'Tenant with this slug already exists');
+        throw new AppError(400, 'Tenant with this slug already exists', 'CONFLICT');
       }
     }
 
@@ -88,7 +88,7 @@ export class TenantService {
     });
 
     if (!tenant) {
-      throw new AppError(404, 'Tenant not found');
+      throw new AppError(404, 'Tenant not found', 'NOT_FOUND');
     }
 
     await prisma.tenant.delete({
