@@ -174,6 +174,31 @@ Interactive API documentation is available at:
 http://localhost:3000/api-docs
 ```
 
+## Demo Site
+
+Run the demo frontend to test the API:
+
+```bash
+# 1. Start Docker services (PostgreSQL + Redis)
+docker-compose up -d
+
+# 2. Run database migrations
+npm run prisma:migrate
+
+# 3. Seed test data (creates admin@test.com / password123)
+npx ts-node scripts/seed-test-user.ts
+
+# 4. Start the API server
+npx ts-node src/index.ts
+
+# 5. In a new terminal, start the demo site
+cd demo-site && python3 -m http.server 8080
+```
+
+Then open the demo site in your browser (port 8080 will be forwarded in Codespaces). Login with:
+- **Email**: `admin@test.com`
+- **Password**: `password123`
+
 ## Testing
 
 ```bash
