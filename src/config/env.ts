@@ -12,9 +12,12 @@ export const config = {
   },
 
   jwt: {
-    secret: process.env.JWT_SECRET || 'your-secret-key',
+    secret: process.env.JWT_SECRET || 'default-secret-key-change-in-production',
     expiresIn: process.env.JWT_EXPIRES_IN || '24h',
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRES_IN || '7d',
+    // IMPORTANT: This secret must match the secret used by acme-auth-service
+    // for JWT token validation to work correctly. Both services must share
+    // the same JWT_SECRET environment variable value.
   },
 
   redis: {

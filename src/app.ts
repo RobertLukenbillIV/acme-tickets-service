@@ -23,7 +23,37 @@ const swaggerOptions = {
     info: {
       title: 'Tickets Service API',
       version: '1.0.0',
-      description: 'Multi-tenant ticket management API with role-based access control',
+      description: `Multi-tenant ticket management API with role-based access control.
+      
+## Authentication
+
+This service validates JWT tokens issued by **acme-auth-service**.
+
+### JWT Token Structure
+
+Tokens must be included in the Authorization header as: \`Bearer <token>\`
+
+**Token Claims:**
+- \`sub\`: User email address
+- \`tenant_id\`: UUID string for tenant isolation
+- \`roles\`: Array of roles (\`ROLE_USER\`, \`ROLE_AGENT\`, \`ROLE_ADMIN\`)
+- \`scopes\`: Array of permission scopes (e.g., \`tickets:read:own\`, \`tickets:write:any\`)
+
+### Role Permissions
+
+- **ROLE_USER**: Can create tickets and view/modify only their own tickets
+- **ROLE_AGENT**: Can view/modify all tickets within their tenant, including assignment
+- **ROLE_ADMIN**: Full access to all tickets and tenant resources, including deletion
+
+### Scope Examples
+
+- \`tickets:read:own\` - Read tickets created by the user
+- \`tickets:read:any\` - Read all tickets in tenant
+- \`tickets:write:own\` - Modify tickets created by the user
+- \`tickets:write:any\` - Modify any ticket in tenant
+- \`tickets:delete:any\` - Delete tickets (ADMIN only)
+
+**Important:** JWT_SECRET must match the secret used by acme-auth-service for token validation.`,
       contact: {
         name: 'API Support',
       },
@@ -40,6 +70,47 @@ const swaggerOptions = {
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT',
+          description: 'JWT token from acme-auth-service with tenant_id, roles, and scopes',
+        },
+      },
+      schemas: {
+        ErrorResponse: {
+          type: 'object',
+          properties: {
+            code: {
+              type: 'string',
+              enum: ['UNAUTHORIZED', 'FORBIDDEN', 'NOT_FOUND', 'VALIDATION_ERROR', 'CONFLICT', 'INTERNAL_ERROR'],
+              description: 'Error code matching acme-contracts',
+            },
+            message: {
+              type: 'string',
+              description: 'Human-readable error message',
+            },
+            timestamp: {
+              type: 'string',
+              format: 'date-time',
+              description: 'ISO 8601 timestamp of when the error occurred',
+            },
+            details: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  field: {
+                    type: 'string',
+                  },
+                  message: {
+                    type: 'string',
+                  },
+                  code: {
+                    type: 'string',
+                  },
+                },
+              },
+              description: 'Additional error details (for validation errors)',
+            },
+          },
+          required: ['code', 'message', 'timestamp'],
         },
       },
     },
