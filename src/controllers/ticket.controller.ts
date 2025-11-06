@@ -60,11 +60,16 @@ export class TicketController {
 
       // Extract only the filter fields that the service expects
       const { status, priority, createdById } = validatedQuery;
-      const tickets = await ticketService.getTickets(req.user!.tenantId, {
-        ...(status && { status: contractToPrismaStatus(status) }),
-        ...(priority && { priority: contractToPrismaPriority(priority) }),
-        createdById,
-      });
+      const tickets = await ticketService.getTickets(
+        req.user!.tenantId,
+        {
+          ...(status && { status: contractToPrismaStatus(status) }),
+          ...(priority && { priority: contractToPrismaPriority(priority) }),
+          createdById,
+        },
+        req.user!.role,
+        req.user!.id
+      );
 
       res.json(tickets);
     } catch (error) {
@@ -91,7 +96,12 @@ export class TicketController {
       const paramSchema = z.object({ id: z.string().uuid() });
       const { id } = paramSchema.parse(req.params);
 
-      const ticket = await ticketService.getTicketById(id, req.user!.tenantId);
+      const ticket = await ticketService.getTicketById(
+        id,
+        req.user!.tenantId,
+        req.user!.role,
+        req.user!.id
+      );
       res.json(ticket);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -118,7 +128,13 @@ export class TicketController {
       const { id } = paramSchema.parse(req.params);
       const validatedData = UpdateTicketRequestSchema.parse(req.body);
 
-      const ticket = await ticketService.updateTicket(id, req.user!.tenantId, validatedData);
+      const ticket = await ticketService.updateTicket(
+        id,
+        req.user!.tenantId,
+        validatedData,
+        req.user!.role,
+        req.user!.id
+      );
       res.json(ticket);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -144,7 +160,7 @@ export class TicketController {
       const paramSchema = z.object({ id: z.string().uuid() });
       const { id } = paramSchema.parse(req.params);
 
-      await ticketService.deleteTicket(id, req.user!.tenantId);
+      await ticketService.deleteTicket(id, req.user!.tenantId, req.user!.role, req.user!.id);
       res.status(204).send();
     } catch (error) {
       if (error instanceof z.ZodError) {
