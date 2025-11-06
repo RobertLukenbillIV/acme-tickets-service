@@ -1,5 +1,5 @@
 import { prisma } from '../config/database';
-import { TicketStatus, TicketPriority, ActivityType, UserRole } from '@prisma/client';
+import { TicketStatus, TicketPriority, ActivityType, UserRole, Prisma } from '@prisma/client';
 import { AppError } from '../middleware/errorHandler';
 import { CreateTicketRequest, UpdateTicketRequest } from '../contracts';
 import { contractToPrismaStatus, contractToPrismaPriority } from '../utils/typeMappers';
@@ -63,7 +63,7 @@ export class TicketService {
     userId?: string
   ) {
     // Build where clause based on role
-    const whereClause: any = {
+    const whereClause: Prisma.TicketWhereInput = {
       tenantId,
       ...filters,
     };

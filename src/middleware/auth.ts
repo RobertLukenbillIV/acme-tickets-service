@@ -39,7 +39,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
       return res.status(401).json({
         code: 'UNAUTHORIZED',
         message: 'Authentication required',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -55,14 +55,14 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
     // Lookup user in database by email to get user ID
     const user = await prisma.user.findUnique({
       where: { email },
-      select: { id: true, email: true, tenantId: true, role: true }
+      select: { id: true, email: true, tenantId: true, role: true },
     });
 
     if (!user) {
       return res.status(401).json({
         code: 'UNAUTHORIZED',
         message: 'User not found',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -71,7 +71,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
       return res.status(401).json({
         code: 'UNAUTHORIZED',
         message: 'Tenant mismatch',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -85,7 +85,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
       role: mappedRole,
       tenantId: tenantId,
       roles: roles,
-      scopes: scopes
+      scopes: scopes,
     };
 
     next();
@@ -94,14 +94,14 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
       return res.status(401).json({
         code: 'UNAUTHORIZED',
         message: 'Token expired',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
     return res.status(401).json({
       code: 'UNAUTHORIZED',
       message: 'Invalid token',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 };
@@ -112,7 +112,7 @@ export const authorize = (...roles: UserRole[]) => {
       return res.status(401).json({
         code: 'UNAUTHORIZED',
         message: 'Authentication required',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -120,7 +120,7 @@ export const authorize = (...roles: UserRole[]) => {
       return res.status(403).json({
         code: 'FORBIDDEN',
         message: 'Insufficient permissions',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -133,7 +133,7 @@ export const checkTenantAccess = (req: AuthRequest, res: Response, next: NextFun
     return res.status(401).json({
       code: 'UNAUTHORIZED',
       message: 'Authentication required',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -143,7 +143,7 @@ export const checkTenantAccess = (req: AuthRequest, res: Response, next: NextFun
     return res.status(403).json({
       code: 'FORBIDDEN',
       message: 'Access denied to this tenant',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -157,18 +157,18 @@ export const requireScope = (...scopes: string[]) => {
       return res.status(401).json({
         code: 'UNAUTHORIZED',
         message: 'Authentication required',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
     const userScopes = req.user.scopes || [];
-    const hasScope = scopes.some(scope => userScopes.includes(scope));
+    const hasScope = scopes.some((scope) => userScopes.includes(scope));
 
     if (!hasScope) {
       return res.status(403).json({
         code: 'FORBIDDEN',
         message: 'Insufficient permissions',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
 
@@ -177,31 +177,37 @@ export const requireScope = (...scopes: string[]) => {
 };
 
 // Helper to check if user can access a specific ticket
-export const canAccessTicket = (ticket: { createdById: string; assignedToId: string | null }, user: AuthRequest['user']): boolean => {
+export const canAccessTicket = (
+  ticket: { createdById: string; assignedToId: string | null },
+  user: AuthRequest['user']
+): boolean => {
   if (!user) return false;
-  
+
   // ADMIN can access any ticket
   if (user.role === UserRole.ADMIN) return true;
-  
+
   // AGENT can access any ticket in their tenant (already filtered by tenantId)
   if (user.role === UserRole.AGENT) return true;
-  
+
   // USER can only access tickets they created
   return ticket.createdById === user.id;
 };
 
 // Helper to check if user can modify a specific ticket
-export const canModifyTicket = (ticket: { createdById: string; assignedToId: string | null }, user: AuthRequest['user']): boolean => {
+export const canModifyTicket = (
+  ticket: { createdById: string; assignedToId: string | null },
+  user: AuthRequest['user']
+): boolean => {
   if (!user) return false;
-  
+
   // ADMIN can modify any ticket
   if (user.role === UserRole.ADMIN) return true;
-  
+
   // AGENT can modify tickets assigned to them or any ticket in their tenant
   if (user.role === UserRole.AGENT) {
     return ticket.assignedToId === user.id || user.scopes.includes('tickets:write:any');
   }
-  
+
   // USER can only modify tickets they created
   return ticket.createdById === user.id;
 };
